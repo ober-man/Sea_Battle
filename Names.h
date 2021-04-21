@@ -1,4 +1,6 @@
 #pragma once
+const int ASCII_CODE = 48;
+
 enum Consts {
 	HORIZONT = 0,
 	VERTICAL = 1,
@@ -14,10 +16,10 @@ enum Consts {
 	HIT = 1,
 	HIT_SHIP = 5,
 	HIT_MISS = 3,
+	HIT_MYSHIP = 6,
 	MISS = 0,
 	KILL = 2,
 	INJURED = 2,
-	NUM_OF_SHIPS = 4
 };
 
 enum ERRORS {
