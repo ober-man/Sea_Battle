@@ -9,8 +9,10 @@ class Application
      private:
         RenderWindow *window;
         MapWidget *mapwidget;
-        Texture random_texture;
-        Menu m;
+        Button *random;
+        Color button_color,
+              main_color;
+        Menu menu;
         void StartGame(RenderWindow* window);
 
      public:
@@ -22,22 +24,21 @@ class Application
 Application::Application()
 {
     window = new sf::RenderWindow(sf::VideoMode(1900, 900), "Sea Battle");
-    // Style::Fullscreen - 3 arg, params: 1040, 610
+    // Style::Fullscreen - 3 arg, params: 1040, 610 (1900, 900) getFullscreenModes getDesktopMode
     /*Music pirateMusic;
-    pirateMusic.setLoop(true);
-    if (!pirateMusic.openFromFile("sounds/pirate.wav"))
-      exit(WRONG_MUSIC);
-    pirateMusic.play();*/
+	pirateMusic.setLoop(true);
+	if (!pirateMusic.openFromFile("sounds/pirate.wav"))
+		exit(WRONG_MUSIC);
+	pirateMusic.play();*/
     mapwidget = new MapWidget(0, 0, 1900, 900, "images/game_begin.png");
-    if(!random_texture.loadFromFile("images/random.png"))
-        exit(WRONG_PICTURE);
+    button_color = Color(126, 0, 0);
+    main_color = Color(126, 181, 221);
+    random = new Button("images/random.png", 1450, 750, button_color);
 }
 
 void Application::Run()
 {
-    m.run(*window);
-    Sprite random(random_texture);
-    random.setPosition(1450, 750);
+    menu.run(*window);
     while(window->isOpen())
     {
         sf::Event event;
@@ -45,29 +46,27 @@ void Application::Run()
             if(event.type == sf::Event::Closed)
                 window->close();
 
-        random.setColor(Color(126, 0, 0));
-        window->clear(Color(126, 181, 221));
+        random->SetColor(button_color);
+        window->clear(main_color);
 
-        if (IntRect(1450, 750, 1600, 120).contains(Mouse::getPosition(*window)))
+        if(IntRect(1450, 750, 1600, 120).contains(Mouse::getPosition(*window)))
         {
-            random.setColor(Color::Blue);
-            if (Mouse::isButtonPressed(Mouse::Left))
+            random->SetColor(Color::Blue);
+            if(Mouse::isButtonPressed(Mouse::Left))
                 StartGame(window);
         }
 
-        mapwidget->Draw(window);
-        window->draw(random);
+        mapwidget->Draw(*window);
+        random->Draw(*window);
         window->display();
     }
 }
 
 Application::~Application()
 {
-    if (window != nullptr)
-        delete window;
-
-    if (mapwidget != nullptr)
-        delete mapwidget;
+    delete window;
+    delete mapwidget;
+    delete random;
 }
 
 void Application::StartGame(RenderWindow* window)
@@ -76,25 +75,20 @@ void Application::StartGame(RenderWindow* window)
     if(!cell.loadFromFile("images/cell.png"))
         exit(WRONG_PICTURE);
     Sprite s(cell);
-    Board b;
-    b.random_ships(b.Myboard);
-    b.random_ships(b.Enemyboard);
 
-    int** MyEmptyBoard = new int* [LSIZE];
-	for (int i = 0; i < LSIZE; i++)
-		MyEmptyBoard[i] = new int[LSIZE];
-    for (int i = 0; i < LSIZE; i++)
-		for (int j = 0; j < LSIZE; j++)
-            if(b.Myboard[i][j] == 2)
-                MyEmptyBoard[i][j] = 2;
-            else
-                MyEmptyBoard[i][j] = 10;
+    Player man;
+    man.random_position();
+    int status = 0;
 
     while(window->isOpen())
     {
         Vector2i pos = Mouse::getPosition(*window);
-        int x = (pos.x) / len;
-        int y = (pos.y) / len;
+        int x_my = (pos.x - x_0) / len;
+        int y_my = (pos.y - y_0) / len;
+        coords XY_my = {x_my, y_my};
+        int x_enemy = (pos.x - x_2) / len;
+        int y_enemy = (pos.y - y_2) / len;
+        coords XY_enemy = {x_enemy, y_enemy};
 
         Event event;
         while(window->pollEvent(event))
@@ -103,40 +97,48 @@ void Application::StartGame(RenderWindow* window)
                 window->close();
             if(event.type == Event::MouseButtonPressed)
 				if(event.key.code == Mouse::Left)
-                    MyEmptyBoard[x][y] = b.Myboard[x][y];
+                {
+                    if(x_my > 0 && y_my > 0 && x_my < LSIZE - 1 && y_my < LSIZE - 1)
+                        // add condition if user press killed cell
+                        status = man.turn(XY_my);
+                        //MyEmptyBoard.Set(x_my, y_my, man.Myboard->Get(x_my, y_my));
+                    if(x_enemy > 0 && y_enemy > 0 && x_enemy < LSIZE - 1 && y_enemy < LSIZE - 1)
+                        status = man.turn(XY_enemy);
+                        //EnemyEmptyBoard.Set(x_enemy, y_enemy, man.Myboard->Get(x_enemy, y_enemy));
+                }
         }
-
         window->clear(Color::White);
+
         for(int i = 0; i < LSIZE; i++)
 			for(int j = 0; j < LSIZE; j++)
 			{
-			    if(MyEmptyBoard[i][j] == 10)
-                    s.setTextureRect(IntRect(0, 0, len, len));
-			    else if(MyEmptyBoard[i][j] == 2)
-                    s.setTextureRect(IntRect(3 * len, 0, len, len));
-                else if(MyEmptyBoard[i][j] == 0)
-                    s.setTextureRect(IntRect(2 * len, 0, len, len));
-                else
-                    s.setTextureRect(IntRect(len, 0, len, len));
-				s.setPosition(i*len, j*len);
+				if(man.Hitboard->Get(i, j) == POISON)
+					s.setTextureRect(IntRect(0, 0, len, len));
+				else if(man.Hitboard->Get(i, j) == HIT_SHIP)
+					s.setTextureRect(IntRect(2 * len, 0, len, len));
+				else if(man.Hitboard->Get(i, j) == HIT_MISS)
+					s.setTextureRect(IntRect(3 * len, 0, len, len));
+				else
+					s.setTextureRect(IntRect(1 * len, 0, len, len));
+				s.setPosition(i*len + x_0, j*len + y_0);
 				window->draw(s);
 			}
 
-        /*for(int i = 0; i < LSIZE; i++)
+        for(int i = 0; i < LSIZE; i++)
 			for(int j = 0; j < LSIZE; j++)
 			{
-			    if(b.Enemyboard[i][j] == 2)
+			    if(man.HitEnemyboard->Get(i, j) == POISON)
+                    s.setTextureRect(IntRect(0, 0, len, len));
+                else if(man.HitEnemyboard->Get(i, j) == HIT_SHIP)
+                    s.setTextureRect(IntRect(2 * len, 0, len, len));
+                else if(man.HitEnemyboard->Get(i, j) == HIT_MISS)
                     s.setTextureRect(IntRect(3 * len, 0, len, len));
                 else
-                    s.setTextureRect(IntRect(0, 0, len, len));
-				s.setPosition(1500 + i*len, 1500 + j*len);
+                    s.setTextureRect(IntRect(1 * len, 0, len, len));
+				s.setPosition(i*len + x_2, j*len + y_2);
 				window->draw(s);
-			}*/
+			}
 
         window->display();
     }
-    for (int i = 0; i < LSIZE; i++) {
-		delete MyEmptyBoard[i];
-	}
-    delete MyEmptyBoard;
 }
