@@ -2,7 +2,8 @@
 #include<iostream>
 #include <vector>
 #include"Names.h"
-
+#include <ctime>
+//class Player;
 class Board
 {
     private:
@@ -13,6 +14,8 @@ class Board
         int add_ship(ship SH);
         int add_hit(coords XY, int check);
         int clean_dead_zone();
+        int dead_zone(coords XY, int check);
+        int random_ships();
 
     public:
         Board();
@@ -20,12 +23,13 @@ class Board
         void Set(int i, int j, int num);
         int Get(int i, int j) const;
         std::vector<coords> free_cells(int* size) const;
-        int dead_zone(coords XY, int check);            // private?
-        int random_ships();                             // private?
+        int personal_ships();
+        int add_extra_hit(coords XY);
         void Print() const;
+
+        friend class Player;
 };
 
-// Create board
 Board::Board()
 {
     board = new int* [LSIZE];
@@ -89,6 +93,8 @@ int Board::random_ships()
 	create_ship(DECK2);
 	create_ship(DECK1);
 	clean_dead_zone();
+	Poison_board();
+	Print();
 	return SUCCESS;
 }
 
@@ -109,6 +115,47 @@ std::vector<coords> Board::free_cells(int* size) const
 			}
 	*size = k;
 	return cells;
+}
+
+ship input()
+{
+	ship SH;
+	int ORIENT;
+	std::cin >> SH.x;
+	std::cin >> SH.y;
+	std::cin >> ORIENT;
+	if (ORIENT == 1)
+		SH.orient = VERTICAL;
+	else if (ORIENT == 0)
+		SH.orient = HORIZONT;
+	return SH;
+}
+
+// Personals ships on board
+int Board::personal_ships() {
+	ship SH;
+
+	for (int i = 0; i < DECK4; i++) {
+		SH = input();
+		Board::add_ship(SH);
+	}
+
+	for (int i = 0; i < DECK3; i++) {
+		SH = input();
+		Board::add_ship(SH);
+	}
+
+	for (int i = 0; i < DECK2; i++) {
+		SH = input();
+		Board::add_ship(SH);
+	}
+
+	for (int i = 0; i < DECK1; i++) {
+		SH = input();
+		Board::add_ship(SH);
+	}
+
+	return SUCCESS;
 }
 
 // Create one type random ships
@@ -186,7 +233,7 @@ int Board::clean_dead_zone()
 {
 	for(int i = 0; i < LSIZE; i++)
 		for(int j = 0; j < LSIZE; j++)
-			if(Get(i, j) != (SHIP || POISON))
+			if(Get(i, j) != SHIP && Get(i, j) != POISON)
 				Set(i, j, 0);
 
 	return SUCCESS;
@@ -262,5 +309,58 @@ int Board::add_hit(coords XY, int check)
 		Set(XY.x + 1, XY.y - 1, DEAD_ZONE);
 	if (Get(XY.x - 1, XY.y - 1) != check)
 		Set(XY.x - 1, XY.y - 1, DEAD_ZONE);
+    if (Get(XY.x, XY.y) != check)
+		Set(XY.x, XY.y, DEAD_ZONE);
+	return SUCCESS;
+}
+
+// Add hit around cell
+int Board::add_extra_hit(coords XY)
+{
+	if (Get(XY.x + 1, XY.y) == SHIP)
+		Set(XY.x + 1, XY.y, INJURED);
+	else
+		Set(XY.x + 1, XY.y, DEAD_ZONE);
+
+	if (Get(XY.x - 1, XY.y) == SHIP)
+		Set(XY.x - 1, XY.y, INJURED);
+	else
+		Set(XY.x - 1, XY.y, DEAD_ZONE);
+
+	if (Get(XY.x, XY.y - 1) == SHIP)
+		Set(XY.x, XY.y - 1, INJURED);
+	else
+		Set(XY.x, XY.y - 1, DEAD_ZONE);
+
+	if (Get(XY.x, XY.y + 1) == SHIP)
+		Set(XY.x, XY.y + 1, INJURED);
+	else
+		Set(XY.x, XY.y + 1, DEAD_ZONE);
+
+	if (Get(XY.x + 1, XY.y + 1) == SHIP)
+		Set(XY.x + 1, XY.y + 1, INJURED);
+	else
+		Set(XY.x + 1, XY.y + 1, DEAD_ZONE);
+
+	if (Get(XY.x - 1, XY.y + 1) == SHIP)
+		Set(XY.x - 1, XY.y + 1, INJURED);
+	else
+		Set(XY.x - 1, XY.y + 1, DEAD_ZONE);
+
+	if (Get(XY.x + 1, XY.y - 1) == SHIP)
+		Set(XY.x + 1, XY.y - 1, INJURED);
+	else
+		Set(XY.x + 1, XY.y - 1, DEAD_ZONE);
+
+	if (Get(XY.x, XY.y) == SHIP)
+		Set(XY.x, XY.y, INJURED);
+	else
+		Set(XY.x, XY.y, DEAD_ZONE);
+
+	if (Get(XY.x - 1, XY.y - 1) == SHIP)
+		Set(XY.x - 1, XY.y - 1, INJURED);
+	else
+		Set(XY.x - 1, XY.y - 1, DEAD_ZONE);
+
 	return SUCCESS;
 }
