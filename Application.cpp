@@ -1,9 +1,8 @@
 #include "Application.h"
+
 Application::Application()
 {
     window = new sf::RenderWindow(sf::VideoMode(1900, 900), "Sea Battle");
-
-    //ship_position = new MapWidget(0, 0, 1900, 900, "images/position.png");
     game = new MapWidget(0, 0, 1900, 900, "images/table.jpg");
     button_color = Color(126, 0, 0);
     main_color = Color(126, 181, 221);
@@ -15,7 +14,6 @@ Application::Application()
 Application::~Application()
 {
     delete window;
-    //delete ship_position;
     delete game;
     delete random;
     delete man;
@@ -23,12 +21,14 @@ Application::~Application()
 
 void Application::Run()
 {
+	// create music
     Music pirate_music;
 	if (!pirate_music.openFromFile("music/pirate.wav"))
 		exit(WRONG_MUSIC);
 	pirate_music.setLoop(true);
 	pirate_music.play();
 
+	// create pictures
     Texture cell;
     if(!cell.loadFromFile("images/cell.png"))
         exit(WRONG_PICTURE);
@@ -46,9 +46,14 @@ void Application::Run()
         SIZE = 21;
     }
     man = new Player;
+	
+	//main loop
     while(window->isOpen())
     {
+		// get coordinates of mouse
         Vector2i pos = Mouse::getPosition(*window);
+	    
+		// and adapt them to board's size
         int x_my = (pos.x - x_0) / len;
         int y_my = (pos.y - y_0) / len;
         if(mode == SUPER_FAN)
@@ -60,8 +65,11 @@ void Application::Run()
         sf::Event event;
         while(window->pollEvent(event))
         {
+			// if window is closed
             if(event.type == sf::Event::Closed)
                 window->close();
+			
+			// if cell is pressed
             if(event.type == Event::MouseButtonPressed)
                 if(event.key.code == Mouse::Left)
                     if(x_my > 0 && y_my > 0 && x_my < SIZE && y_my < SIZE)
@@ -71,6 +79,8 @@ void Application::Run()
                         else
                             man->Myboard->Set(x_my, y_my, SHIP);
                     }
+			
+			// if user wants to make ship coordinates by his own
             if(event.type == Event::KeyPressed && event.key.code == Keyboard::Enter)
                 if(man->check_ship_number() == 10)
                 {
@@ -82,6 +92,7 @@ void Application::Run()
         random->SetColor(button_color);
         window->clear(main_color);
 
+		// random making ship coordinates
         if(IntRect(1450, 750, 450, 160).contains(Mouse::getPosition(*window)))
         {
             random->SetColor(Color::Blue);
@@ -91,7 +102,8 @@ void Application::Run()
                 StartGame(s, mode);
             }
         }
-
+		
+		// draw a window and some pictures
         game->Draw(*window);
         DrawTable(s, mode);
         ships.setPosition(1200, y_2);
@@ -103,12 +115,16 @@ void Application::Run()
 
 void Application::StartGame(Sprite s, int mode)
 {
+	// variable status is a current status of a game
+	// if status > 0 then it is user's turn
+	// else computer's
     int status = 10;
 
     while(window->isOpen())
     {
         if(status > 0)
         {
+			// get coordinates of mouse
             Vector2i pos = Mouse::getPosition(*window);
             int x_my = (pos.x - x_0) / len;
             int y_my = (pos.y - y_0) / len;
@@ -122,21 +138,28 @@ void Application::StartGame(Sprite s, int mode)
             Event event;
             while(window->pollEvent(event))
             {
+				// if window is closed
                 if(event.type == Event::Closed)
                     window->close();
+				
+				// if a cell is pressed
                 if(event.type == Event::MouseButtonPressed && status != PLAYER_WIN)
                     if(event.key.code == Mouse::Left)
                         if(x_my > 0 && y_my > 0 && x_my < SIZE && y_my < SIZE)
                         {
+							// change status to know whose turn is now
                             if(mode == SUPER_FAN)
                                 status = man->extra_turn(XY_my);
                             else
                                 status = man->turn(XY_my);
-                            std::cout << status << std::endl;
                         }
             }
+			
+			// draw a window and pictures
             game->Draw(*window);
             DrawBoards(s, mode);
+			
+			// if user win - draw it
             if(status == PLAYER_WIN)
                 win->Draw(*window);
             window->display();
@@ -145,21 +168,23 @@ void Application::StartGame(Sprite s, int mode)
         {
             if(status != PLAYER_LOSE)
             {
+				// change status to know whose turn is now
                 if(mode == SUPER_FAN)
                     status = man->extra_enemy_turn();
                 else
                     status = man->enemy_turn();
             }
 
-            std::cout << status << std::endl;
-
             Event event;
             while(window->pollEvent(event))
                 if(event.type == Event::Closed)
                     window->close();
 
+			// draw a window and pictures
             game->Draw(*window);
             DrawBoards(s, mode);
+			
+			// if computer win - draw it
             if(status == PLAYER_LOSE)
                 lose->Draw(*window);
             window->display();
@@ -169,7 +194,7 @@ void Application::StartGame(Sprite s, int mode)
 
 void Application::DrawBoards(Sprite s, int mode)
 {
-    // Upper left corners
+    // draw upper left corners
     s.setTextureRect(IntRect(len, 0, len, len));
     s.setPosition(x_0, y_0);
     if(mode == SUPER_FAN)
@@ -180,6 +205,7 @@ void Application::DrawBoards(Sprite s, int mode)
         s.setPosition(x_2_fan, y_2_fan);
     window->draw(s);
 
+	// draw borders
     for(int i = 1; i < SIZE; i++)
     {
         s.setTextureRect(IntRect((i + 3) * len, 0, len, len));
@@ -201,6 +227,26 @@ void Application::DrawBoards(Sprite s, int mode)
         window->draw(s);
     }
 
+	// draw main part of boards:
+	// board to that user shoot
+    for(int i = 1; i < LSIZE; i++)
+        for(int j = 1; j < LSIZE; j++)
+        {
+            if(man->Hitboard->Get(i, j) == POISON)
+                continue;
+            else if(man->Hitboard->Get(i, j) == HIT_SHIP)
+                s.setTextureRect(IntRect(2 * len, 0, len, len));
+            else if(man->Hitboard->Get(i, j) == HIT_MISS)
+                s.setTextureRect(IntRect(3 * len, 0, len, len));
+            else
+                s.setTextureRect(IntRect(1 * len, 0, len, len));
+            s.setPosition(i*len + x_0, j*len + y_0);
+            if(mode == SUPER_FAN)
+                s.setPosition(i*len + x_0_fan, j*len + y_0_fan);
+            window->draw(s);
+        }
+	
+	// board to that computer shoot
     for(int i = 1; i < LSIZE; i++)
         for(int j = 1; j < LSIZE; j++)
         {
@@ -218,32 +264,17 @@ void Application::DrawBoards(Sprite s, int mode)
             window->draw(s);
         }
 
-    for(int i = 1; i < LSIZE; i++)
-        for(int j = 1; j < LSIZE; j++)
-        {
-            if(man->Hitboard->Get(i, j) == POISON)
-                continue;
-            else if(man->Hitboard->Get(i, j) == HIT_SHIP)
-                s.setTextureRect(IntRect(2 * len, 0, len, len));
-            else if(man->Hitboard->Get(i, j) == HIT_MISS)
-                s.setTextureRect(IntRect(3 * len, 0, len, len));
-            else
-                s.setTextureRect(IntRect(1 * len, 0, len, len));
-            s.setPosition(i*len + x_0, j*len + y_0);
-            if(mode == SUPER_FAN)
-                s.setPosition(i*len + x_0_fan, j*len + y_0_fan);
-            window->draw(s);
-        }
 }
 void Application::DrawTable(Sprite s, int mode)
 {
-    // Upper left corner
+    // draw upper left corner
     s.setTextureRect(IntRect(len, 0, len, len));
     s.setPosition(x_0, y_0);
     if(mode == SUPER_FAN)
         s.setPosition(x_0_fan, y_0_fan);
     window->draw(s);
 
+	// draw borders 
     for(int i = 1; i < SIZE; i++)
     {
         s.setTextureRect(IntRect((i + 3) * len, 0, len, len));
@@ -256,6 +287,8 @@ void Application::DrawTable(Sprite s, int mode)
             s.setPosition(x_0_fan, i*len + y_0_fan);
         window->draw(s);
     }
+	
+	// draw a board to that ships are being written
     for(int i = 0; i < SIZE; i++)
         for(int j = 0; j < SIZE; j++)
         {
