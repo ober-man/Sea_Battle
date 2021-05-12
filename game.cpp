@@ -22,16 +22,21 @@ Player::~Player()
 	delete HitEnemyboard;
 }
 
+// return number of user kills
 int Player::Get_kills() const
 {
 	return kills;
 }
 
+// return number of computer kills
 int Player::Get_enemy_kills() const
 {
 	return enemy_kills;
 }
 
+// function for user's ship placement
+// if there is enough ships
+// it will return 10 = number of ships
 int Player::check_ship_number()
 {
     int counter = 0;
@@ -56,132 +61,122 @@ int Player::random_position()
 	return SUCCESS;
 }
 
+// if computer's last turn was successful
+// it will make a target near last hit
 coords Player::target(coords XY, int &orient)
 {
 	if (orient == NOTHING)
-    {
+    	{
 		if (this->HitEnemyboard->Get(XY.x, XY.y + 1) == 0) {
 			XY.y++;
 			if (this->Myboard->Get(XY.x, XY.y) == SHIP)
 				orient = HORIZONT;
-				return XY;
-            std::cout << "1 if" << std::endl;
+			return XY;
 		}
 		else if (this->HitEnemyboard->Get(XY.x, XY.y - 1) == 0) {
 			XY.y--;
 			if (this->Myboard->Get(XY.x, XY.y) == SHIP)
 				orient = HORIZONT;
-            return XY;
-            std::cout << "2 if" << std::endl;
+            		return XY;
 		}
 		else if (this->HitEnemyboard->Get(XY.x + 1, XY.y) == 0) {
 			XY.x++;
 			if (this->Myboard->Get(XY.x, XY.y) == SHIP)
 				orient = VERTICAL;
-				return XY;
-            std::cout << "3 if" << std::endl;
+			return XY;
 		}
-		else //if(this->HitEnemyboard->Get(XY.x - 1, XY.y) == 0)
-        {
+		else
+        	{
 			XY.x--;
 			if (this->Myboard->Get(XY.x, XY.y) == SHIP)
 				orient = VERTICAL;
-				return XY;
-            std::cout << "4 if" << std::endl;
+			return XY;
 		}
 	}
 
-	else if (orient == VERTICAL) {
+	else if (orient == VERTICAL) 
+	{
 		if (this->HitEnemyboard->Get(XY.x + 1, XY.y) == 0)
-        {
+       		{
 			XY.x++;
-			std::cout << "5 if" << std::endl;
 			return XY;
-        }
+        	}
 		else if (this->HitEnemyboard->Get(XY.x - 1, XY.y) == 0)
-        {
+        	{
 			XY.x--;
-			std::cout << "6 if" << std::endl;
 			return XY;
-        }
+        	}
 	}
 
-	else {
+	else 
+	{
 		if (this->HitEnemyboard->Get(XY.x, XY.y + 1) == 0)
-        {
+        	{
 			XY.y++;
-            std::cout << "7 if" << std::endl;
-            return XY;
-        }
+            		return XY;
+        	}
 		else //if (this->HitEnemyboard->Get(XY.x, XY.y - 1) == 0)
-        {
+        	{
 			XY.y--;
-            std::cout << "8 if" << std::endl;
-            return XY;
-        }
+            		return XY;
+        	}
 	}
-    int size = 0;
-    std::vector<coords> free = HitEnemyboard->free_cells(&size);
-    std::cout << size << std::endl;
-    if(size != 0)
-        XY = free[rand() % size];
-    else
-        return XY;
-    std::cout << XY.x << "\n" << XY.y << std::endl;
+	int size = 0;
+	std::vector<coords> free = HitEnemyboard->free_cells(&size);
+	if(size != 0)
+		XY = free[rand() % size];
+	else
+		return XY;
 	return XY;
 }
 
-// Turn of computer
+// computer turn
 int Player::enemy_turn()
 {
-    Myboard->Print();
-    Enemyboard->Print();
+	Myboard->Print();
+	Enemyboard->Print();
 	coords XY;
 
 	if (Last_hit.x != 0 && Last_hit.y != 0)
-    {
+   	{
 		XY = target(Last_hit, this->orient_last_hit);
-		std::cout << XY.x << "\n" << XY.y << std::endl;
 	}
-	else {
+	else 
+	{
 		int size = 0;
 		std::vector<coords> free = HitEnemyboard->free_cells(&size);
-		std::cout << size << std::endl;
 		if(size != 0)
-            XY = free[rand() % size];
-        else
-            return PLAYER_LOSE;
-		std::cout << XY.x << "\n" << XY.y << std::endl;
+            		XY = free[rand() % size];
+       		else
+            		return PLAYER_LOSE;
 	}
-    int status = hit(XY, *Myboard, *HitEnemyboard);
+    	int status = hit(XY, *Myboard, *HitEnemyboard);
 	if(status == HIT)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_SHIP);
 		this->Last_hit = XY;
-		std::cout << "1 situation" << std::endl;
 		return COMP_SHOOT_AGAIN;
 	}
 	else if (status == MISS)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_MISS);
-		//Myboard->Set(XY.x, XY.y, HIT_MISS);
+		
 		// If computer miss - player shoots next
 		return COMP_MISS;
 	}
 	else if (status == KILL)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_SHIP);
-		//Myboard->Set(XY.x, XY.y, HIT_MYSHIP);
+		
 		// Add dead zone around ship
 		HitEnemyboard->dead_zone(XY, SHIP);
-		//Myboard->dead_zone(XY, HIT_MYSHIP);
 		++enemy_kills;
+		
 		// If hit, computer can continue shooting
 		// if computer haven't won yet
 		this->Last_hit.x = 0;
 		this->Last_hit.y = 0;
 		this->orient_last_hit = NOTHING;
-		std::cout << "2 situation" << std::endl;
 		if (enemy_kills < ship_number)
 			return COMP_SHOOT_AGAIN;
 		else return PLAYER_LOSE;
@@ -189,28 +184,32 @@ int Player::enemy_turn()
 	else return ERR_PLACE;
 }
 
-// Turn of player
+// player turn
 int Player::turn(coords XY)
 {
 	int status = hit(XY, *Enemyboard, *Hitboard);
 	if (status == HIT)
 	{
 		Hitboard->Set(XY.x, XY.y, HIT_SHIP);
+		
 		// If hit, you can continue shooting
 		return PLAYER_SHOOT_AGAIN;
 	}
 	else if (status == MISS)
 	{
 		Hitboard->Set(XY.x, XY.y, HIT_MISS);
+		
 		// If miss - your opponent shoots next
 		return PLAYER_MISS;
 	}
 	else if (status == KILL)
 	{
 		Hitboard->Set(XY.x, XY.y, HIT_SHIP);
+		
 		// Add dead zone around ship
 		Hitboard->dead_zone(XY, SHIP);
 		++kills;
+		
 		// If hit, you can continue shooting
 		// if you haven't won yet
 		if (kills < ship_number)
@@ -221,8 +220,8 @@ int Player::turn(coords XY)
 }
 
 // Check hit on board
-int Player::hit(coords XY, Board& board, Board& board2) {
-
+int Player::hit(coords XY, Board& board, Board& board2)
+{
 	if (board.Get(XY.x, XY.y) == SHIP)
 		return check_inj(XY, board, board2);
 	else
@@ -342,10 +341,9 @@ int Player::check_inj(coords XY, Board& board1, Board& board2)
 
 // EXTRA MODE
 
-// Ход игрока экстра фан
-int Player::extra_turn(coords XY) {
-
-
+// player turn at extra fan mode
+int Player::extra_turn(coords XY) 
+{
 	std::cout << extra_hit(XY) << "KILLS" << std::endl;
 
 	if (kills < ship_number)
@@ -355,8 +353,10 @@ int Player::extra_turn(coords XY) {
 	return ERR_PLACE;
 }
 
-// Ход компа экстра фан (повторяет 9 раз обычный ход)
-int Player::extra_enemy_turn() {
+// computer turn at extra fan mode:
+// = 9 ordinary computer turns
+int Player::extra_enemy_turn() 
+{
 
 	int size = 0;
 	std::vector<coords> free = HitEnemyboard->free_cells(&size);
@@ -398,7 +398,8 @@ int Player::extra_enemy_turn() {
 	return COMP_MISS;
 }
 
-// Функция для хода игрока, повторяет 9 обычных ходов в ближайшие клетки
+// player turn at extra fan mode:
+// = 9 ordinary player turns
 int Player::extra_hit(coords XY) {
 	coords XY_ = XY;
 	if (Enemyboard->Get(XY_.x, XY_.y) != POISON)
@@ -438,26 +439,32 @@ int Player::extra_hit(coords XY) {
 	return kills;
 }
 
-// Ход для компьютера, выглядит как для игрока, но для компьютера
-int Player::eeturn(coords XY) {
-	if (hit(XY, *Myboard, *HitEnemyboard) == HIT)
+// computer turn
+int Player::eeturn(coords XY)
+{
+	int status = hit(XY, *Myboard, *HitEnemyboard);
+	if (status == HIT)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_SHIP);
+		
 		// If hit, you can continue shooting
 		return COMP_SHOOT_AGAIN;
 	}
-	else if (hit(XY, *Myboard, *HitEnemyboard) == MISS)
+	else if (status == MISS)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_MISS);
+		
 		// If miss - your opponent shoots next
 		return COMP_MISS;
 	}
-	else if (hit(XY, *Myboard, *HitEnemyboard) == KILL)
+	else if (status == KILL)
 	{
 		HitEnemyboard->Set(XY.x, XY.y, HIT_SHIP);
+		
 		// Add dead zone around ship
 		HitEnemyboard->dead_zone(XY, SHIP);
 		++enemy_kills;
+		
 		// If hit, you can continue shooting
 		// if you haven't won yet
 		if (enemy_kills < ship_number)
