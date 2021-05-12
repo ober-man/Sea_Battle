@@ -27,50 +27,62 @@ Menu::~Menu()
 
 int Menu::run(RenderWindow& window)
 {
+	// main loop
 	while(window.isOpen())
-    {
-        start->SetColor(button_color);
-        settings->SetColor(button_color);
-        exit->SetColor(button_color);
-        Event event;
-        while(window.pollEvent(event))
-            if(event.type == Event::Closed)
-                window.close();
-        window.clear(main_color);
+	{
+		start->SetColor(button_color);
+		settings->SetColor(button_color);
+		exit->SetColor(button_color);
 
-        if(IntRect(30, 10, 180, 40).contains(Mouse::getPosition(window)))
-        {
-            start->SetColor(Color::Blue);
-            if(Mouse::isButtonPressed(Mouse::Left))
-                return GameMode(window);
-        }
-        if(IntRect(30, 70, 200, 40).contains(Mouse::getPosition(window)))
-        {
-            settings->SetColor(Color::Blue);
-            if(Mouse::isButtonPressed(Mouse::Left))
-                SettingsWindow(window);
-        }
-        if(IntRect(30, 130, 100, 40).contains(Mouse::getPosition(window)))
-        {
-            exit->SetColor(Color::Blue);
-            if(Mouse::isButtonPressed(Mouse::Left))
-                window.close();
-        }
-        background->Draw(window);
-        start->Draw(window);
-        settings->Draw(window);
-        exit->Draw(window);
-        window.display();
-    }
+		Event event;
+		while(window.pollEvent(event))
+			// if window is closed
+			if(event.type == Event::Closed)
+			window.close();
+		window.clear(main_color);
+
+		// first button - start game
+		if(IntRect(30, 10, 180, 40).contains(Mouse::getPosition(window)))
+		{
+			start->SetColor(Color::Blue);
+			if(Mouse::isButtonPressed(Mouse::Left))
+				return GameMode(window);
+		}
+		// second button - view settings
+		if(IntRect(30, 70, 200, 40).contains(Mouse::getPosition(window)))
+		{
+			settings->SetColor(Color::Blue);
+			if(Mouse::isButtonPressed(Mouse::Left))
+				SettingsWindow(window);
+		}
+		// third button - exit from the game
+		if(IntRect(30, 130, 100, 40).contains(Mouse::getPosition(window)))
+		{
+			exit->SetColor(Color::Blue);
+			if(Mouse::isButtonPressed(Mouse::Left))
+				window.close();
+		}
+		
+		// draw a window and pictures
+		background->Draw(window);
+		start->Draw(window);
+		settings->Draw(window);
+		exit->Draw(window);
+		window.display();
+	}
     return ERR_MODE;
 }
 
+// return mode of the game
+// game with computer or extra fan
 int Menu::GameMode(RenderWindow& window)
 {
+	// main loop
     while(window.isOpen())
     {
         sf::Event event;
         while(window.pollEvent(event))
+			// if window is closed
             if(event.type == sf::Event::Closed)
                 window.close();
 
@@ -78,24 +90,22 @@ int Menu::GameMode(RenderWindow& window)
         super_fan->SetColor(button_color);
         window.clear(main_color);
 
+		// first button - computer game
         if(IntRect(190, 370, 300, 200).contains(Mouse::getPosition(window)))
         {
             comp_game->SetColor(Color::Blue);
             if(Mouse::isButtonPressed(Mouse::Left))
                 return COMP_GAME;
         }
-        /*if(IntRect(590, 370, 300, 200).contains(Mouse::getPosition(window)))
-        {
-            comp_game->SetColor(Color::Blue);
-            if(Mouse::isButtonPressed(Mouse::Left))
-                return COMP_GAME;
-        }*/
+		// second button - extra fan mode
         if(IntRect(1350, 350, 300, 200).contains(Mouse::getPosition(window)))
         {
             super_fan->SetColor(Color::Blue);
             if(Mouse::isButtonPressed(Mouse::Left))
                 return SUPER_FAN;
         }
+		
+		// draw a window and pictures
         game_mode->Draw(window);
         comp_game->Draw(window);
         super_fan->Draw(window);
@@ -106,25 +116,19 @@ int Menu::GameMode(RenderWindow& window)
 
 void Menu::SettingsWindow(RenderWindow& window)
 {
-    Button escape{"images/string_exit.png", 1630, 830, button_color}; // may be change
     while(window.isOpen())
     {
-        escape.SetColor(button_color);
         Event event;
         while(window.pollEvent(event))
+			// if window is closed
             if(event.type == Event::Closed)
                 window.close();
+			// escape to the main menu if the key "ESCAPE" is pressed
             else if(event.type == Event::KeyPressed &&
                     event.key.code == Keyboard::Escape)
                 return;
-        if(IntRect(1630, 830, 100, 40).contains(Mouse::getPosition(window)))
-        {
-            escape.SetColor(Color::Blue);
-            if(Mouse::isButtonPressed(Mouse::Left))
-                return;
-        }
+		
         settings_map->Draw(window);
-        escape.Draw(window);
         window.display();
     }
 }
