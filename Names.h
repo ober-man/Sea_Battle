@@ -12,10 +12,6 @@ enum Consts
 	DECK2 = 2,
 	DECK1 = 1,
 
-	// board size
-	LSIZE = 12,
-	SIZE = LSIZE - 1,
-
 	// cells on Myboard / Enemyboard
 	// default = 0
 	POISON = 2,
@@ -45,12 +41,18 @@ enum Consts
 	COMP_SHOOT_AGAIN = -3,
 
 	NOTHING = -100,
+
+	// game modes
+	COMP_GAME = 1,
+	SUPER_FAN = 2,
 };
 
 enum ERRORS
 {
 	SUCCESS = 0,
 	ERR_PLACE = -100,
+	ERR_MODE = -200,
+	ERR_STATUS = -300,
 };
 
 // Struct for SHIPS data
@@ -69,12 +71,15 @@ struct coords
 	int y = 0;
 };
 
+// board size
+int LSIZE = 12;
+int SIZE = 11;
 const int len = 39;
 const int x_0 = 169;
 const int y_0 = 230;
 const int x_2 = 1300;
 const int y_2 = 230;
-const int x_end = 1642;
-const int y_end = 666;
-const int my_x_0 = 176;
-const int my_x_end = 757;
+const int x_0_fan = 100;
+const int y_0_fan = 55;
+const int x_2_fan = 1000;
+const int y_2_fan = 55;
