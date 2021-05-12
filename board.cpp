@@ -1,6 +1,7 @@
 #include"board.h"
 #include<iostream>
 #include <vector>
+
 // Create board
 Board::Board()
 {
@@ -15,6 +16,8 @@ Board::Board()
 }
 
 // Create poison for board
+// it locates at the border
+// and is used in all checks
 int Board::Poison_board()
 {
 	for (int i = 0; i < LSIZE; i++)
@@ -35,12 +38,14 @@ Board::~Board()
 	delete[] board;
 }
 
+// set a cell on the board
 void Board::Set(int i, int j, int num)
 {
     if(i < LSIZE && j < LSIZE)
         board[i][j] = num;
 }
 
+// get cell's value
 int Board::Get(int i, int j) const
 {
     if(i < LSIZE && j < LSIZE)
@@ -48,6 +53,7 @@ int Board::Get(int i, int j) const
     else return ERR_PLACE;
 }
 
+// print board to the console
 void Board::Print() const
 {
 	std::cout << '\n';
@@ -73,8 +79,9 @@ int Board::random_ships()
 	return SUCCESS;
 }
 
-
-ship input() {
+// input a ship for user's placement
+ship input() 
+{
 	ship SH;
 	int ORIENT;
 	std::cin >> SH.x;
@@ -87,26 +94,31 @@ ship input() {
 	return SH;
 }
 
-// Personals ships on board
-int Board::personal_ships() {
+// Personals ships placement on board
+int Board::personal_ships() 
+{
 	ship SH;
 
-	for (int i = 0; i < DECK4; i++) {
+	for (int i = 0; i < DECK4; i++) 
+	{
 		SH = input();
 		Board::add_ship(SH);
 	}
 
-	for (int i = 0; i < DECK3; i++) {
+	for (int i = 0; i < DECK3; i++) 
+	{
 		SH = input();
 		Board::add_ship(SH);
 	}
 
-	for (int i = 0; i < DECK2; i++) {
+	for (int i = 0; i < DECK2; i++) 
+	{
 		SH = input();
 		Board::add_ship(SH);
 	}
 
-	for (int i = 0; i < DECK1; i++) {
+	for (int i = 0; i < DECK1; i++) 
+	{
 		SH = input();
 		Board::add_ship(SH);
 	}
@@ -134,6 +146,8 @@ std::vector<coords> Board::free_cells(int* size) const
 }
 
 // Create one type random ships
+// 1 four-deck, 2 three-deck
+// 3 two-deck, 4 one-deck
 int Board::create_ship(int type)
 {
 
