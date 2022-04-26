@@ -2,6 +2,7 @@
 #include"board.h"
 #include <chrono>
 #include <thread>
+#define RANDOM
 
 // Game and board
 class Player
@@ -29,6 +30,7 @@ class Player
         ~Player();
         int Get_kills() const;
         int Get_enemy_kills() const;
+	int check_ship_number();
         int turn(coords XY);
         int enemy_turn();
         int extra_turn(coords XY);
