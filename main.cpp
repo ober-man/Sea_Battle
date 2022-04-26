@@ -1,7 +1,8 @@
+
+//
 #define GRAPHICS
 
 #ifdef GRAPHICS
-#include<SFML/Graphics.hpp>
 #include"Application.h"
 
 int main()
@@ -15,19 +16,21 @@ int main()
 
 #ifndef GRAPHICS
 #include "game.h"
-int main() {
-	Board game;
-	game.random_ships(game.Enemyboard);
-	game.print(game.Hitboard);
-	game.print(game.Enemyboard);
+int main()
+{
+	Player man;
+	man.Myboard->random_ships();
+	man.Enemyboard->random_ships();
+	man.print(*man.Hitboard);
+	man.print(*man.Enemyboard);
 	while(1)
     {
         coords XY;
         std::cin >> XY.x;
         std::cin >> XY.y;
-        game.turn(XY);
-        game.print(game.Hitboard);
-        game.print(game.Enemyboard);
+        man.turn(XY);
+        man.print(*man.Hitboard);
+        man.print(*man.Enemyboard);
     }
 	return 0;
 }
