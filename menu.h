@@ -14,6 +14,7 @@ class Menu
                *comp_game,
                *super_fan;
         MapWidget *background,
+		  *game_mode,
                   *settings_map;
         Color main_color,
               button_color;
