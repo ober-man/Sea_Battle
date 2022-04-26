@@ -121,12 +121,6 @@ coords Player::target(coords XY, int &orient)
             		return XY;
         	}
 	}
-	int size = 0;
-	std::vector<coords> free = HitEnemyboard->free_cells(&size);
-	if(size != 0)
-		XY = free[rand() % size];
-	else
-		return XY;
 	return XY;
 }
 
@@ -135,6 +129,7 @@ int Player::enemy_turn()
 {
 	Myboard->Print();
 	Enemyboard->Print();
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	coords XY;
 
 	if (Last_hit.x != 0 && Last_hit.y != 0)
@@ -187,6 +182,10 @@ int Player::enemy_turn()
 // player turn
 int Player::turn(coords XY)
 {
+	Hitboard->Print();
+   	if(Hitboard->Get(XY.x, XY.y) != 0)
+		return PLAYER_SHOOT_AGAIN;
+	
 	int status = hit(XY, *Enemyboard, *Hitboard);
 	if (status == HIT)
 	{
